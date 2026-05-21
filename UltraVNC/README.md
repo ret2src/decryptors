@@ -1,4 +1,4 @@
-# UltraVNC Password Decryptor (PowerShell)
+# UltraVNC Password Decryptor
 
 A PowerShell script to decrypt passwords stored by [UltraVNC](https://www.uvnc.com/) in its
 configuration files (e.g. `ultravnc.ini`).
@@ -18,7 +18,7 @@ to recover the plaintext password from the hex-encoded ciphertext found in the c
 Run the script and paste in the encrypted password when prompted:
 
 ```powershell
-.\UltraVNCDecrypt.ps1
+.\UltraVNC-Decrypt.ps1
 
 Type in the encrypted password: 3B87CDF66850B1AE00
 The password is: mypassword
