@@ -1,10 +1,12 @@
 # UltraVNC Password Decryptor
 
-Decrypt passwords stored by [UltraVNC](https://www.uvnc.com/) in its configuration files (e.g. `ultravnc.ini`). Available as a PowerShell script for Windows and a Bash script for Linux.
+Decrypt passwords stored by [UltraVNC](https://www.uvnc.com/) in its configuration files (e.g. `ultravnc.ini`).
+Available as a PowerShell script for Windows and a Bash script for Linux.
 
 ## Background
 
-UltraVNC encrypts passwords using DES with a hardcoded key. The decryptors in this directory reverse this process to recover the plaintext password from the hex-encoded ciphertext found in the config file.
+UltraVNC encrypts passwords using DES with a hardcoded key.
+The decryptors in this directory reverse this process to recover the plaintext password from the hex-encoded ciphertext found in the config file.
 
 ## Files
 
@@ -43,12 +45,6 @@ openssl list -providers
 .\UltraVNC-Decrypt.ps1
 ```
 
-| Function | Description |
-|---|---|
-| `Decrypt-Password` / `decrypt_password` | Decrypts a hex-encoded UltraVNC password string |
-| `Encrypt-Password` / `encrypt_password` | Encrypts a plaintext password into UltraVNC's format |
-| `Create-DES` | (PowerShell only) Initialises the DES cipher with UltraVNC's hardcoded key |
-
 ### Linux
 
 ```bash
@@ -65,8 +61,7 @@ The password is: remote12
 
 ### Where to find the encrypted password
 
-Open `ultravnc.ini` (typically located at `C:\Program Files\uvnc bvba\UltraVNC\ultravnc.ini`)
-and look for:
+Open `ultravnc.ini` (typically located at `C:\Program Files\uvnc bvba\UltraVNC\ultravnc.ini`) and look for:
 
 ```ini
 [ultravnc]
@@ -76,11 +71,25 @@ passwd2=...
 
 Copy the value after `passwd=` and paste it into the prompt.
 
+## Functions
+
+| Function | Description |
+|---|---|
+| `Decrypt-Password` / `decrypt_password` | Decrypts a hex-encoded UltraVNC password string |
+| `Encrypt-Password` / `encrypt_password` | Encrypts a plaintext password into UltraVNC's format |
+| `Create-DES` (PowerShell only) | Initializes the DES cipher with UltraVNC's hardcoded key |
+
 ## Security Notice
 
-UltraVNC's password encryption is **not secure**. It uses a static, publicly known DES key.
-Anyone with read access to `ultravnc.ini` can trivially recover the password. Consider:
+UltraVNC's password encryption is **not secure**.
+It uses a static, publicly known DES key, meaning anyone with read access to `ultravnc.ini` can trivially recover the plaintext password.
+This is not a flaw that can be patched by choosing a stronger password — the algorithm itself is broken by design.
 
-- Restricting file permissions on `ultravnc.ini`
-- Using VPN or SSH tunnelling instead of relying on VNC's built-in auth
-- Switching to a VNC implementation with stronger authentication
+Consider the following mitigations:
+
+- **Prefer modern remote access protocols over VNC where possible.** RDP (with Network Level Authentication), solutions like Windows Admin Center, or modern remote access tools offer significantly stronger authentication and encryption than UltraVNC, and support modern auth standards such as mutual TLS and SSO/SAML. Reserve VNC only for cases where no alternative exists.
+- **Restrict file permissions on `ultravnc.ini`** so that only administrators can read it. On Windows, review the ACL via `icacls "C:\Program Files\uvnc bvba\UltraVNC\ultravnc.ini"`.
+- **Audit who has access to `ultravnc.ini`** and any system that may store copies of it. Never place `ultravnc.ini` on widely readable network shares (SMB, NFS, etc.) or include it in unencrypted backups.
+- **Use a unique password per machine and never reuse VNC passwords elsewhere.** If you reuse the same VNC password across multiple hosts or other services, a single compromised machine exposes all of them. Treat each host as an independent security boundary and use different passwords across all hosts, services, and users to reduce the blast radius of a breach.
+- **Never expose VNC directly to the Internet.** Place it behind a VPN or SSH tunnel so that the VNC port (default `5900`) is never reachable from untrusted networks. Ideally, restrict access to dedicated management network segments.
+- **Rotate VNC passwords regularly** and immediately after any suspected compromise or staff offboarding.
